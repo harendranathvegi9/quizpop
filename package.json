@@ -1,0 +1,25 @@
+{
+  "name": "quizpop",
+  "version": "0.0.1",
+  "description": "Quizlet PWA.",
+  "dependencies": {
+    "cookie-session": "^2.0.0-alpha.1",
+    "express": "^4.13.4",
+    "helmet": "^2.1.0",
+    "request": "^2.72.0"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/s3ththompson/quizpop.git"
+  },
+  "author": "Seth Thompson",
+  "license": "Apache-2.0",
+  "bugs": {
+    "url": "https://github.com/s3ththompson/quizpop/issues"
+  },
+  "homepage": "https://github.com/s3ththompson/quizpop#readme"
+}
