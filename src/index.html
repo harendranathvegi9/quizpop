@@ -2,45 +2,15 @@
 <html>
 <head>
   <title></title>
+  <link rel="stylesheet" type="text/css" href="css/base.css">
   <script src="//cdnjs.cloudflare.com/ajax/libs/mithril/0.2.5/mithril.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/localforage/1.4.2/localforage.min.js"></script>
+  <script src="js/app.js"></script>
 </head>
 <body>
   <div id="app"></div>
   <script type="text/javascript">
-    var home = {
-      controller: function() {
-        return {};
-      },
-        view: function(controller) {
-          return m("div", "QuizPop");
-        }
-    };
-
-    var login = {
-      controller: function() {
-        return {};
-      },
-        view: function(controller) {
-          return m("a", {href: "/auth"}, "Auth");
-        }
-    };
-
-    var dashboard = {
-      controller: function() {
-        return {id: m.route.param("userID")};
-      },
-        view: function(controller) {
-          return m("div", controller.id);
-        }
-    };
-
-    m.route.mode = "pathname";
-
-    m.route(document.querySelector("#app"), "/", {
-      "/": home,
-      "/login": login,
-      "/dashboard": dashboard
-    });
+    QuizPop();
   </script>
 </body>
 </html>
