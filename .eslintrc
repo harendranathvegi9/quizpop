@@ -1,0 +1,14 @@
+{
+    "env": {
+    	"node": true
+    },
+    "extends": "airbnb-base/legacy",
+    "rules": {
+        "func-names": "off",
+        "no-param-reassign": "off",
+        "no-console": "off",
+        "consistent-return": "off",
+        "vars-on-top": "off"
+    },
+    "root": true
+}
