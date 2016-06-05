@@ -2,40 +2,22 @@ var m = require('mithril');
 var localforage = require('localforage')
 
   var User = function(data) {
-    this.username = m.prop(data.username);
-    this.free = m.prop(data.account_type);
-    this.photo = m.prop(data.profile_image);
-    this.sets = m.prop(data.sets || []);
+    this.username = data.username;
+    this.free = data.account_type;
+    this.photo = data.profile_image;
+    this.sets = data.sets || [];
   };
 
   var Auth = {
     id: null,
     token: null,
-    cache: null,
     request: function(options) {
       options.url = 'https://api.quizlet.com/2.0/' + options.url + '?access_token=' + Auth.token;
-      options.dataType = 'jsonp';
-      return m.request(options)
-    },
-    getUser: function() {
-      if (Auth.cache.free()) {
-        return m.deferred().resolve(Auth.cache).promise
-      }
-      return Auth.request({
-        url: 'users/' + Auth.id,
-        background: true,
-        initialValue: Auth.cache,
-        type: User
-      }).then(function(user) {
-        return Auth.cache = user;
-      });
+      return m.jsonp(options);
     },
     logIn: function(id, token) {
       Auth.id = id;
       Auth.token = token;
-      Auth.cache = new User({
-        username: id
-      });
       return localforage.setItem('id', id).then(function() {
         return localforage.setItem('token', token);
       });
@@ -48,21 +30,19 @@ var localforage = require('localforage')
         Auth.id = id;
         return localforage.getItem('token').then(function(token) {
           Auth.token = token;
-          Auth.cache = new User({username: id});
         });
       })
     }
   };
 
   var Home = {
-    controller: function() {
+    oninit: function(vnode) {
       if (Auth.loggedIn()) {
-        m.route('/dashboard');
+        m.route.setPath("/dashboard");
       }
-      return {};
     },
-    view: function(controller) {
-      return [m('.title', 'QuizPop'), m('a', {href: '/login', config: m.route}, 'Login')];
+    view: function(vnode) {
+      return [m('.title', 'QuizPop'), m('a', {href: '/login', oncreate: m.route.link}, 'Login')];
     }
   };
 
@@ -84,52 +64,50 @@ var localforage = require('localforage')
   }
 
   var Set = function(data) {
-    this.title = m.prop(data.title);
+    this.title = data.title;
   }
 
   var SetView = {
-    controller: function() {
-      var set = Sets.getSet(m.route.param('setID'));
-      set.then(m.redraw);
-      return {
-        set: set
-      };
+    oninit: function(vnode) {
+      vnode.state.set = new Set({});
+      Auth.request({url: 'sets/' + vnode.attrs.setID}).then(function(s){
+        vnode.state.set = new Set(s);
+      }).then(m.redraw);
     },
-    view: function(controller) {
-      return m('.title', controller.set().title());
+    view: function(vnode) {
+      return m('.title', vnode.state.set.title);
     }
   }
 
   var Login = {
-    view: function(controller) {
+    view: function(vnode) {
       return m('a', {href: '/auth'}, 'Authorize with Quizlet');
     }
   };
 
   var Dashboard = {
-    controller: function() {
-      if (m.route.param('token')) {
-        Auth.logIn(m.route.param('userID'), m.route.param('token'));
-        m.route('/dashboard');
+    oninit: function(vnode) {
+      if (vnode.attrs.token) {
+        Auth.logIn(vnode.attrs.userID, vnode.attrs.token);
+        m.route.setPath("/dashboard");
       }
       if (!Auth.loggedIn()) {
-        m.route('/login');
+        m.route.setPath("/login");
       }
-      var user = Auth.getUser();
-      user.then(m.redraw);
-      return {
-        user: user
-      };
+      vnode.state.user = new User({});
+      Auth.request({url: 'users/' + Auth.id}).then(function(u){
+        vnode.state.user = new User(u);
+      }).then(m.redraw);
     },
-    view: function(controller) {
+    view: function(vnode) {
       return [
         m('.profile', [
-          m('.username', controller.user().username()),
-          m('img.photo', {src: controller.user().photo()})
+          m('.username', vnode.state.user.username),
+          m('img.photo', {src: vnode.state.user.photo})
           ]),
-        m('.sets', controller.user().sets().map(function (set) {
+        m('.sets', vnode.state.user.sets.map(function (set) {
           return m('.set', 
-            m('a', {href: '/set/' + set.id, config: m.route}, set.title)
+            m('a', {href: '/set/' + set.id, oncreate: m.route.link}, set.title)
             );
         }))
         ];
@@ -137,7 +115,7 @@ var localforage = require('localforage')
   };
 
   var boot = function() {
-    m.route.mode = 'pathname';
+    m.route.prefix('');
     m.route(document.querySelector('#app'), '/', {
       '/': Home,
       '/login': Login,
