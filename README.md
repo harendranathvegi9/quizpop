@@ -13,6 +13,7 @@ $ gulp
 
 - [x] Quizlet integration
 - [ ] App-friendly UI + gestures
+- [ ] Mithril v2 migration
 - [ ] Service worker offline caching
 - [ ] App manifest
 - [ ] Spaced-repitition algorithm

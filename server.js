@@ -71,10 +71,10 @@ app.get('/callback', function(req, res) {
   });
 });
 
-app.use(express.static('src'));
+app.use(express.static('dist'));
 
 app.use(function(req, res){
-  res.sendFile('src/index.html', { root: __dirname });
+  res.sendFile('dist/index.html', { root: __dirname });
 });
 
 app.listen(3333);

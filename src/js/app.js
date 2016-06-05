@@ -1,4 +1,5 @@
-(function(window, m, localforage, undefined) {
+var m = require('mithril');
+var localforage = require('localforage')
 
   var User = function(data) {
     this.username = m.prop(data.username);
@@ -145,8 +146,8 @@
     });
   }
 
-  window.QuizPop = function() {
+  QuizPop = function() {
     Auth.init().then(boot);
   };
 
-})(window, m, localforage);
+module.exports = QuizPop;

@@ -1,51 +1,78 @@
 var gulp = require('gulp');
 var nodemon = require('gulp-nodemon');
-var browserSync = require('browser-sync');
 var sass = require('gulp-sass');
 var debug = require('gulp-debug');
 var sourcemaps = require('gulp-sourcemaps');
+var watchify = require('watchify');
+var browserify = require('browserify');
+var source = require('vinyl-source-stream');
+var buffer = require('vinyl-buffer');
+var gutil = require('gulp-util');
 
-gulp.task('sass', function () {
+var bundler = function (watching) {
+  var opts = {
+    entries: ['./src/js/app.js'],
+    debug: true
+  };
+  var b = (watching) ? watchify(browserify(Object.assign(watchify.args, opts))) : browserify(opts);
+  var rebundle = function() {
+    return b.bundle()
+      .on('error', gutil.log.bind(gutil, 'Browserify Error'))
+      .pipe(source('bundle.js'))
+      .pipe(buffer())
+      .pipe(sourcemaps.init({loadMaps: true}))
+      .pipe(sourcemaps.write('./'))
+      .pipe(gulp.dest('./dist/js/'));
+  }
+  if (watching) {
+    b.on('update', rebundle); 
+  }
+  b.on('log', gutil.log);
+  rebundle()
+}
+
+gulp.task('js', bundler.bind(null, false));
+
+gulp.task('index', function () {
   return gulp
-    .src('./src/sass/*.scss')
+    .src('./src/index.html')
+    .pipe(gulp.dest('./dist/'));
+});
+
+gulp.task('css', function () {
+  return gulp
+    .src('./src/css/**/*.scss')
     .pipe(sourcemaps.init())
     .pipe(debug({title: 'sass'}))
     .pipe(sass().on('error', sass.logError))
     .pipe(sourcemaps.write('.', {
         includeContent: false,
-        sourceRoot: '/sass'
+        sourceRoot: '/css'
     }))
-    .pipe(gulp.dest('./src/css/'))
-    .pipe(browserSync.stream());
+    .pipe(gulp.dest('./dist/css/'))
 });
 
-gulp.task('node', function(cb){
-  var started = false;
-  nodemon({
+gulp.task('build', ['css', 'js', 'index']);
+
+gulp.task('node', function(){
+  return nodemon({
     script: 'server.js',
     ignore: [
       'gulpfile.js',
+      'bundler.js',
       'package.json',
-      'src/*/**'
+      'src/*/**',
+      'dist/*/**',
+      'node_modules/*/**'
     ]
-  }).once('start', cb);
+  });
 });
 
-gulp.task('serve', ['node', 'sass'], function() {
-  gulp.watch('./src/sass/*.scss', ['sass']);
-  browserSync({
-    proxy: 'localhost:3333',
-    logPrefix: 'quizpop',
-    notify: false,
-    open: false
-  });
-  gulp.watch([
-    './src/**/*',
-    '!./src/css/**/*',
-    '!./src/sass/**/*',
-    '!./src/service-worker.js',
-    '!./gulpfile.js'
-  ], browserSync.reload);
+gulp.task('serve', ['node', 'build'], function() {
+
+  gulp.watch('./src/css/**/*.scss', ['css']);
+  bundler(true)
+  gulp.watch('./src/index.html', ['index']);
 });
 
 gulp.task('default', ['serve']);
